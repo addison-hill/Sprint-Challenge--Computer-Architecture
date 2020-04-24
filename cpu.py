@@ -15,6 +15,13 @@ import sys
 # JMP = 0b01010100
 # JEQ = 0b01010101
 # JNE = 0b01010110
+# AND = 0b10101000
+# OR = 0b10101010
+# XOR = 0b10101011
+# NOT = 0b01101001
+# SHL = 0b10101100
+# SHR = 0b10101101
+# MOD = 0b10100100
 
 
 class CPU:
@@ -43,6 +50,13 @@ class CPU:
         self.branchtable[0b01010100] = self.handle_JMP
         self.branchtable[0b01010101] = self.handle_JEQ
         self.branchtable[0b01010110] = self.handle_JNE
+        self.branchtable[0b10101000] = self.handle_AND
+        self.branchtable[0b10101010] = self.handle_OR
+        self.branchtable[0b10101011] = self.handle_XOR
+        self.branchtable[0b01101001] = self.handle_NOT
+        self.branchtable[0b10101100] = self.handle_SHL
+        self.branchtable[0b10101101] = self.handle_SHR
+        self.branchtable[0b10100100] = self.handle_MOD
 
     def handle_HLT(self):
         self.running = False
@@ -142,6 +156,47 @@ class CPU:
         else:
             self.pc += 2
 
+    def handle_AND(self):
+        operand_a = self.ram[self.pc+1]
+        operand_b = self.ram[self.pc+2]
+        self.alu('AND', operand_a, operand_b)
+        self.pc += 3
+
+    def handle_OR(self):
+        operand_a = self.ram[self.pc+1]
+        operand_b = self.ram[self.pc+2]
+        self.alu('OR', operand_a, operand_b)
+        self.pc += 3
+
+    def handle_XOR(self):
+        operand_a = self.ram[self.pc+1]
+        operand_b = self.ram[self.pc+2]
+        self.alu('XOR', operand_a, operand_b)
+        self.pc += 3
+
+    def handle_NOT(self):
+        operand_a = self.ram[self.pc+1]
+        self.alu('NOT', operand_a)
+        self.pc += 2
+
+    def handle_SHL(self):
+        operand_a = self.ram[self.pc+1]
+        operand_b = self.ram[self.pc+2]
+        self.alu('SHL', operand_a, operand_b)
+        self.pc += 3
+
+    def handle_SHR(self):
+        operand_a = self.ram[self.pc+1]
+        operand_b = self.ram[self.pc+2]
+        self.alu('SHR', operand_a, operand_b)
+        self.pc += 3
+
+    def handle_MOD(self):
+        operand_a = self.ram[self.pc+1]
+        operand_b = self.ram[self.pc+2]
+        self.alu('MOD', operand_a, operand_b)
+        self.pc += 3
+
     def load(self):
         """Load a program into memory."""
 
@@ -159,7 +214,7 @@ class CPU:
                 self.ram[address] = int(line, 2)
                 address += 1
 
-    def alu(self, op, reg_a, reg_b):
+    def alu(self, op, reg_a, reg_b=None):
         """ALU operations."""
 
         if op == "ADD":
@@ -177,6 +232,20 @@ class CPU:
             elif self.reg[reg_a] > self.reg[reg_b]:
                 # set the G flag to 1
                 self.FL = 0b00000010
+        elif op == "AND":
+            self.reg[reg_a] &= self.reg[reg_b]
+        elif op == "OR":
+            self.reg[reg_a] |= self.reg[reg_b]
+        elif op == "XOR":
+            self.reg[reg_a] ^= self.reg[reg_b]
+        elif op == "NOT":
+            self.reg[reg_a] = ~self.reg[reg_a]
+        elif op == "SHL":
+            self.reg[reg_a] <<= self.reg[reg_b]
+        elif op == "SHR":
+            self.reg[reg_a] >>= self.reg[reg_b]
+        elif op == "MOD":
+            self.reg[reg_a] %= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
